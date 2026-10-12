@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070b10">
+  <meta name="description" content="BLUE — an unfinished investigation. A punched card, and a terminal waiting for its last command.">
+  <title>BLUE</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070b10'/%3E%3Cpath d='M4 18h24' stroke='%238fd3f0' stroke-width='1.5'/%3E%3Ccircle cx='9' cy='24' r='1.2' fill='%237d8e98'/%3E%3Ccircle cx='16' cy='24' r='1.2' fill='%237d8e98'/%3E%3Ccircle cx='23' cy='24' r='1.2' fill='%237d8e98'/%3E%3C/svg%3E">
+  <script>
+    (()=>{let s={};try{s=JSON.parse(localStorage.getItem('blue-study-settings-v4')||'{}')||{};}catch{}
+    const d=document.documentElement;d.dataset.theme=s.theme==='light'||s.theme==='dark'?s.theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    if(s.motion==='reduce'||matchMedia('(prefers-reduced-motion: reduce)').matches)d.dataset.motion='reduce';})();
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#code-input">跳至终端输入</a>
+  <main id="stage" class="stage" data-view="threshold" data-phase="waiting" data-lamp="0">
+
+    <!-- Above the horizon: the command, in light. -->
+    <section class="sky" id="sky" aria-label="BLUE 终端">
+      <div class="sky-fx" aria-hidden="true"></div>
+      <div class="terminal" id="terminal">
+        <ol class="history" id="history" aria-label="之前未被接受的输入"></ol>
+        <form id="code-form" class="command-form" autocomplete="off">
+          <span id="input-help" class="sr-only">补全 STOP T 后面的代码。直接输入英文字母，或粘贴完整短语，按 Enter 提交。按向下键打开卡片。</span>
+          <div class="command-line">
+            <span class="prefix" aria-hidden="true">STOP T</span><div id="code-input" class="terminal-entry" role="textbox" aria-label="补全 STOP T 后的代码" aria-multiline="false" aria-describedby="input-help response" tabindex="0" lang="en" inputmode="none"><span class="entry-glyphs" aria-hidden="true"></span><span class="block-caret" aria-hidden="true"></span></div><button class="transmit" type="submit" aria-label="提交代码">[ ↵ ]</button>
+          </div>
+          <p class="command-final" aria-hidden="true"><span class="final-light">STOP THE MADNESS</span><span class="final-ink">STOP THE MADNESS</span></p>
+        </form>
+      </div>
+    </section>
+
+    <div class="horizon" id="horizon" aria-hidden="true"><i class="horizon-glow"></i><i class="horizon-rule"></i></div>
+    <p id="response" class="response" role="status" aria-live="polite"></p>
+
+    <!-- Below the horizon: evidence and record. -->
+    <div class="below" id="below">
+
+      <section class="threshold" id="threshold" aria-label="入口">
+        <button id="card-dots" class="card-dots" type="button" aria-controls="card-view" aria-describedby="card-dots-hint">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="dots-label">卡片</span>
+          <span id="card-dots-hint" class="sr-only">打开原卡。也可以按向下键，或在触屏上向上滑。</span>
+        </button>
+
+        <section class="aftermath" id="aftermath" aria-label="命令结果" hidden>
+          <p class="halted type-line" data-line="halted" aria-hidden="true"></p>
+          <div class="voices" aria-hidden="true">
+            <div class="echo"><p class="type-line" data-line="stay"></p><p class="type-line" data-line="ahead"></p></div>
+            <p class="last type-line" data-line="love"></p>
+          </div>
+          <p class="sr-only" id="aftermath-text">HALTED. 停止命令已生效。留下的话：I Love—</p>
+          <nav class="ending-links" id="ending-links" aria-label="之后">
+            <div class="ending-primary"><button id="ending-notes" type="button">[ 手记 ]</button><button id="ending-card" type="button">[ 再看这张卡 ]</button></div>
+            <button id="again" class="replay" type="button">重新输入 <span aria-hidden="true">↺</span></button>
+          </nav>
+        </section>
+      </section>
+
+      <section class="card-view" id="card-view" aria-label="原卡" inert>
+        <div class="card-shell">
+          <div class="card-toolbar">
+            <div class="mode-switch" role="radiogroup" aria-label="卡片视图">
+              <button type="button" role="radio" data-card-mode="original" aria-checked="true">原卡</button>
+              <button type="button" role="radio" data-card-mode="text" aria-checked="false">文字</button>
+              <button type="button" role="radio" data-card-mode="scan" aria-checked="false">扫描</button>
+            </div>
+            <div class="zoom-tools" role="group" aria-label="缩放">
+              <button type="button" id="zoom-out" aria-label="缩小">−</button><output id="zoom-label" aria-live="off">1×</output><button type="button" id="zoom-in" aria-label="放大">+</button>
+            </div>
+            <button type="button" class="card-close" id="card-close" aria-label="收起卡片，回到地平线">[ ↑ ]</button>
+          </div>
+
+          <div class="card-body" id="card-body">
+            <div class="card-stack">
+              <div class="card-frame" id="card-frame" tabindex="0" role="group" aria-roledescription="可缩放图像" aria-label="原卡。按 + 或 − 缩放，0 复原，放大后用方向键平移。" data-zoomed="false">
+                <div class="card-zoom" id="card-zoom">
+                  <img id="card-image" src="./assets/blue-original.png" draggable="false" alt="BLUE 打孔卡：上半部有五排已完成的打孔、蓝色工作线和三处修补；左侧贴着写有 BLUE 的便笺，右侧手写 HORIZON；下半部为十列九行文字。可在“文字”视图中阅读全部原词。">
+                  <svg id="lamp-overlay" class="lamp-overlay" viewBox="0 0 1620 976" preserveAspectRatio="none" aria-hidden="true"></svg>
+                  <div class="hotspots" id="hotspots" hidden>
+                    <button type="button" class="hotspot" data-artifact="blue" aria-label="01 BLUE 便笺">01</button>
+                    <button type="button" class="hotspot" data-artifact="alarm" aria-label="02 ALARM.">02</button>
+                    <button type="button" class="hotspot" data-artifact="patches" aria-label="03 修补">03</button>
+                    <button type="button" class="hotspot" data-artifact="legacy" aria-label="04 STOP T">04</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-text" id="card-text" hidden>
+                <table class="word-grid" lang="en">
+                  <caption class="sr-only">原卡文字，按卡片上的位置排列：九行十列。</caption>
+                  <tbody id="word-grid"></tbody>
+                </table>
+                <ol class="voice-list" id="voice-list" lang="en" aria-label="十个声音，逐列竖读"></ol>
+              </div>
+            </div>
+
+            <aside class="artifact-panel" id="artifact-panel" aria-labelledby="artifact-title" hidden>
+              <header><span class="eyebrow">A SECOND LOOK</span><h2 id="artifact-title">再看一眼。</h2><p>那些痕迹，原来一直都在。</p></header>
+              <nav class="artifact-tabs" aria-label="选择卡片上的痕迹">
+                <button type="button" data-artifact="blue" aria-pressed="false">01 <span>BLUE</span></button>
+                <button type="button" data-artifact="alarm" aria-pressed="false">02 <span>ALARM.</span></button>
+                <button type="button" data-artifact="patches" aria-pressed="false">03 <span>修补</span></button>
+                <button type="button" data-artifact="legacy" aria-pressed="false">04 <span>STOP T</span></button>
+              </nav>
+              <div class="artifact-copy" id="artifact-copy" aria-live="polite"><p class="artifact-empty">点一个编号，灯会照到那里。</p></div>
+              <button type="button" class="note-jump" id="artifact-to-notes">读手记里的这一段 <span aria-hidden="true">↘</span></button>
+            </aside>
+          </div>
+
+          <section class="lamp" id="lamp" aria-label="提示灯" data-level="0">
+            <div class="lamp-bar">
+              <div class="lamp-rings">
+                <button type="button" id="lamp-toggle" class="lamp-name" aria-pressed="false" aria-label="提示灯：开或关">LAMP</button>
+                <button type="button" class="ring" data-level="1" aria-label="提示 1 · 方向"><i></i></button>
+                <button type="button" class="ring" data-level="2" aria-label="提示 2 · 孔"><i></i></button>
+                <button type="button" class="ring" data-level="3" aria-label="提示 3 · 形状"><i></i></button>
+                <button type="button" class="ring" data-level="4" aria-label="提示 4 · 示范"><i></i></button>
+                <button type="button" class="ring" data-level="5" aria-label="提示 5 · 逐行"><i></i></button>
+                <button type="button" class="ring" data-level="6" aria-label="提示 6 · 答案"><i></i></button>
+              </div>
+              <p id="lamp-caption" class="lamp-caption" aria-live="polite"></p>
+              <p id="lamp-strip" class="lamp-strip" lang="en" hidden></p>
+            </div>
+            <div id="lamp-controls" class="lamp-controls" hidden></div>
+            <div id="lamp-readout" class="lamp-readout" hidden></div>
+          </section>
+        </div>
+      </section>
+
+      <article class="notes-view" id="notes-view" aria-labelledby="notes-title" inert>
+        <div class="notes-inner">
+          <header class="notes-head">
+            <p class="notes-status" lang="en">STOP THE MADNESS — HALTED.</p>
+            <div class="notes-head-actions"><button type="button" data-open-artifact="blue">[ 再看这张卡 ]</button><button type="button" id="notes-close">[ ↑ ]</button></div>
+          </header>
+          <div class="notes-intro">
+            <span class="notes-kicker">LOUIS / 创作记录</span>
+            <h1 id="notes-title" tabindex="-1">Behind <em>BLUE.</em></h1>
+            <p>一个词如何成为一张卡片，<br>一张卡片如何留下一个故事。</p>
+            <span class="draft-label">作者原话与创作记录摘编 · 待作者审阅</span>
+            <nav class="notes-contents" aria-label="手记目录"><a href="#note-title">01 标题</a><a href="#note-phrase">02 一句话</a><a href="#note-fiction">03 小说</a><a href="#note-investigation">04 痕迹</a><a href="#note-omissions">05 留白</a><a href="#note-terminal">06 继续</a></nav>
+          </div>
+
+          <section id="note-title" class="note">
+            <span class="note-number">01</span>
+            <h2>HORIZON 上面是什么？</h2>
+            <figure class="crop crop-blue" aria-hidden="true"></figure>
+            <blockquote>“因为HORIZON上面是什么？BLUE。”</blockquote>
+            <p>在打孔卡成形之前，BLUE 已经是标题。HORIZON 把画面分成上下，也指向某些无法回头的边界。后来，BLUE 成为档案的编号，蓝笔留下另一个人的工作。</p>
+            <cite>Louis · 2026.08.12 ·《TWT混战分析》<br>档案编号与蓝笔 · 2026.09.04 · 读者交流</cite>
+            <button type="button" class="note-jump" data-open-artifact="blue">在卡片上看 <span aria-hidden="true">↗</span></button>
+          </section>
+
+          <section id="note-phrase" class="note">
+            <span class="note-number">02</span>
+            <h2>先有一句话</h2>
+            <p class="phrase-art" lang="en" aria-hidden="true"><span>STOP</span> <span>THE</span> <span>MADNESS</span></p>
+            <blockquote>“谜底就是STOP THE MADNESS。<br>不知道能不能设计出来。”</blockquote>
+            <p>停止短语先被选定，编码的方法随后才长出来。作者觉得这句话“非常有力”，于是不断调整下方的词语，让同一张纸既能纵向读成故事，又能横向读出它。</p>
+            <cite>Louis · 2026.08.12 ·《项目进展与分析》<br>选择措辞的理由 · 2026.09.04 · 读者交流</cite>
+          </section>
+
+          <section id="note-fiction" class="note">
+            <span class="note-number">03</span>
+            <h2>先让它成为小说</h2>
+            <p class="column-art" lang="en" aria-label="原卡中的一列文字"><span>I’ll</span> <span>Stay</span> <span>Below.</span> <span>You</span> <span>Go</span> <span>Ahead,</span> <span>Mother.</span> <span>I</span> <span>Love—</span></p>
+            <blockquote lang="en">“it must work as a fiction<br>on the surface level first”</blockquote>
+            <p>纵向阅读先要成立。警报、告别与求援，应当在读者还不知道密码的时候，就已经留下什么。横向的机关随后才向读者打开。</p>
+            <cite>Louis · 2026.09.04 · 读者交流</cite>
+          </section>
+
+          <section id="note-investigation" class="note">
+            <span class="note-number">04</span>
+            <h2>有人已经做到这里</h2>
+            <figure class="crop crop-legacy" aria-hidden="true"></figure>
+            <blockquote>“某人只知道这个上面一定有停止代码，<br>但不知道代码是什么，不知道怎么打”</blockquote>
+            <p>蓝色马克笔留下了一个人的工作过程。现存的孔记录正确结果，补丁保留被纠正的尝试。调查停在 STOP T；余下的部分交到读者手里。</p>
+            <cite>Louis · 2026.08.12 ·《项目进展与分析》<br>补丁与错配 · 原卡设计记录</cite>
+            <button type="button" class="note-jump" data-open-artifact="patches">观察修补痕迹 <span aria-hidden="true">↗</span></button>
+          </section>
+
+          <section id="note-omissions" class="note">
+            <span class="note-number">05</span>
+            <h2>被拿掉的东西</h2>
+            <figure class="omission-art" aria-hidden="true"><span></span><small>SPACE LEFT OPEN</small></figure>
+            <blockquote>“后面觉得可能有点过，<br>就全部取消了”</blockquote>
+            <p>辐射符号与溅血曾经被考虑过。最后留下的是纸面上的痕迹、补丁，以及没有完成的调查。此前的讨论记下了添加的冲动，后来的交流也记下了删去的理由。</p>
+            <cite>Louis · 2026.09.04 · 读者交流</cite>
+          </section>
+
+          <section id="note-terminal" class="note">
+            <span class="note-number">06</span>
+            <h2>从阅读，到输入</h2>
+            <p class="end-art" lang="en" aria-hidden="true"><span>STOP THE MADNESS</span><i></i><small>HALTED.</small></p>
+            <blockquote>“最终解谜网页就是一个终端机（参考上图），<br>然后输入，然后看彩蛋”</blockquote>
+            <p>这次，停止代码有了可以输入的地方。命令生效，机器安静下来。已经留下的话仍然停在原处。</p>
+            <cite>Louis · 2026.09.04 · 读者交流<br>结局方向 · 2026.09.27 · 本次网页创作</cite>
+            <button type="button" class="note-jump" data-open-artifact="alarm">纸上还有一个更早的词 <span aria-hidden="true">↗</span></button>
+          </section>
+
+          <footer class="notes-end"><span lang="en">BLUE</span><p>谢谢你把这份工作继续下去。</p><button type="button" id="notes-back">回到静默 <span aria-hidden="true">↑</span></button></footer>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <button id="menu-button" class="menu-button" type="button" aria-haspopup="dialog" aria-controls="menu" aria-expanded="false" aria-label="菜单（Esc）">[ MENU ]</button>
+
+  <section id="terminal-keyboard" class="terminal-keyboard" hidden aria-label="英文屏幕键盘">
+    <header><span lang="en">A — Z</span><button type="button" data-close-keyboard aria-label="收起英文键盘">[ CLOSE ]</button></header>
+    <div class="keyboard-keys" lang="en"></div>
+  </section>
+
+  <dialog id="menu" class="menu" aria-labelledby="menu-title">
+    <header class="menu-head"><div><span id="menu-title" lang="en">BLUE</span><small id="menu-state" lang="en">LISTENING</small></div><button type="button" data-close-menu aria-label="关闭菜单">[ ESC ]</button></header>
+    <nav class="menu-actions" aria-label="去往">
+      <button type="button" id="menu-card"><span lang="en">[ CARD ]</span><small>原卡</small></button>
+      <button type="button" id="menu-keyboard"><span lang="en">[ KEYS ]</span><small>英文键盘</small></button>
+      <button type="button" id="menu-notes" hidden><span lang="en">[ NOTES ]</span><small>手记</small></button>
+      <button type="button" id="menu-second-look" hidden><span lang="en">[ SECOND LOOK ]</span><small>再看这张卡</small></button>
+    </nav>
+    <div class="menu-settings">
+      <fieldset class="choice"><legend>明暗</legend>
+        <label><input type="radio" name="theme" value="system"><span>跟随系统</span></label>
+        <label><input type="radio" name="theme" value="dark"><span>暗</span></label>
+        <label><input type="radio" name="theme" value="light"><span>亮</span></label>
+      </fieldset>
+      <fieldset class="choice"><legend>动态</legend>
+        <label><input type="radio" name="motion" value="system"><span>跟随系统</span></label>
+        <label><input type="radio" name="motion" value="reduce"><span>减弱</span></label>
+      </fieldset>
+      <div class="menu-row"><span>声音</span><button type="button" id="sound" class="toggle" aria-pressed="false">关</button></div>
+      <div class="menu-row"><span>进度</span><button type="button" id="clear-progress" class="toggle">清除</button></div>
+    </div>
+  </dialog>
+
+  <div id="typed-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="live-message" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>
